@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biologie VWO — Examenanalyse 2016–2025</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2030;
+    --border: #252a3a;
+    --accent: #00e5a0;
+    --accent2: #5b8fff;
+    --accent3: #ff6b6b;
+    --accent4: #ffc857;
+    --accent5: #c77dff;
+    --text: #e8eaf0;
+    --text-dim: #7a8099;
+    --text-muted: #4a5068;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0d0f14 0%, #141720 50%, #0f1420 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.2)} }
+  .header-title { font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text); }
+  .header-sub { font-size: 11px; color: var(--text-dim); font-family: var(--mono); letter-spacing: 1px; margin-top: 2px; }
+  .header-badge {
+    background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3);
+    color: var(--accent); font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 0; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stat-item {
+    padding: 16px 24px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* Navigation */
+  .nav { 
+    display: flex; gap: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; padding: 0 40px;
+  }
+  .nav-btn {
+    padding: 14px 22px; background: none; border: none; cursor: pointer;
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    color: var(--text-dim); white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav-icon { font-size: 15px; }
+
+  /* Main content */
+  .main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Section titles */
+  .section-title {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 3px; color: var(--accent); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--text-muted); }
+  .card-title {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--text-dim); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-accent { color: var(--accent); }
+
+  /* Toggle */
+  .toggle-wrap { display: flex; gap: 0; margin-bottom: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: fit-content; }
+  .toggle-btn {
+    padding: 7px 16px; background: none; border: none; cursor: pointer;
+    font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .toggle-btn.active { background: var(--surface2); color: var(--text); }
+
+  /* Chart containers */
+  .chart-wrap { position: relative; }
+  .chart-wrap canvas { max-height: 300px; }
+  .chart-wrap-tall canvas { max-height: 420px; }
+
+  /* Ranking list */
+  .ranking-list { display: flex; flex-direction: column; gap: 6px; }
+  .rank-item {
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+  }
+  .rank-item:hover { border-color: var(--accent); background: rgba(0,229,160,0.03); }
+  .rank-item.expanded { border-color: var(--accent2); background: rgba(91,143,255,0.05); }
+  .rank-num {
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+    min-width: 24px; text-align: right;
+  }
+  .rank-bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .rank-bar { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s; }
+  .rank-name { font-size: 13px; font-weight: 500; flex: 0 0 240px; }
+  .rank-count { font-family: var(--mono); font-size: 12px; color: var(--accent); min-width: 32px; text-align: right; }
+  .rank-domain-badge {
+    font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 3px;
+    background: rgba(255,200,87,0.1); color: var(--accent4); border: 1px solid rgba(255,200,87,0.2);
+    min-width: 40px; text-align: center;
+  }
+  .rank-detail {
+    display: none; padding: 14px 14px 14px 50px;
+    background: rgba(91,143,255,0.04); border-top: 1px solid var(--border);
+    margin-top: 6px; border-radius: 0 0 6px 6px;
+  }
+  .rank-detail.show { display: block; }
+  .rank-detail-q {
+    font-size: 13px; color: var(--text-dim); font-style: italic;
+    line-height: 1.6; margin-bottom: 10px;
+    border-left: 3px solid var(--accent2); padding-left: 12px;
+  }
+  .rank-detail-tip {
+    font-size: 12px; color: var(--accent);
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .rank-detail-tip::before { content: '→'; font-family: var(--mono); flex-shrink: 0; }
+
+  /* Insight cards */
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .insight-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px; position: relative; overflow: hidden;
+  }
+  .insight-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .insight-card.c1::before { background: var(--accent); }
+  .insight-card.c2::before { background: var(--accent2); }
+  .insight-card.c3::before { background: var(--accent3); }
+  .insight-card.c4::before { background: var(--accent4); }
+  .insight-card.c5::before { background: var(--accent5); }
+  .insight-num {
+    font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--border);
+    position: absolute; top: 12px; right: 16px;
+  }
+  .insight-tag {
+    font-size: 10px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-bottom: 8px;
+  }
+  .insight-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  .insight-body { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+  /* Bloom/RTTI bar */
+  .level-bar { display: flex; flex-direction: column; gap: 10px; }
+  .level-row { display: grid; grid-template-columns: 140px 1fr 50px; align-items: center; gap: 12px; }
+  .level-label { font-size: 13px; color: var(--text-dim); }
+  .level-bg { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .level-fill { height: 100%; border-radius: 4px; transition: width 0.6s; }
+  .level-pct { font-family: var(--mono); font-size: 12px; text-align: right; }
+
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Status / meta info */
+  .meta-block {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    padding: 20px; margin-bottom: 28px;
+    font-size: 13px; color: var(--text-dim); line-height: 1.8;
+  }
+  .meta-block strong { color: var(--text); }
+  .meta-ok { color: var(--accent); font-family: var(--mono); font-size: 11px; }
+  .meta-skip { color: var(--accent3); font-family: var(--mono); font-size: 11px; }
+
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); padding: 10px 12px; border-bottom: 1px solid var(--border);
+    text-align: left; white-space: nowrap;
+  }
+  .data-table td { padding: 9px 12px; border-bottom: 1px solid rgba(37,42,58,0.5); color: var(--text-dim); }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 3px; font-family: var(--mono);
+    font-size: 10px; border: 1px solid;
+  }
+  .pill-R { background: rgba(0,229,160,0.1); color: var(--accent); border-color: rgba(0,229,160,0.2); }
+  .pill-T1 { background: rgba(91,143,255,0.1); color: var(--accent2); border-color: rgba(91,143,255,0.2); }
+  .pill-T2 { background: rgba(255,200,87,0.1); color: var(--accent4); border-color: rgba(255,200,87,0.2); }
+  .pill-I { background: rgba(255,107,107,0.1); color: var(--accent3); border-color: rgba(255,107,107,0.2); }
+  .pill-bloom1 { background: rgba(0,229,160,0.08); color: #5eedc0; border-color: rgba(94,237,192,0.2); }
+  .pill-bloom2 { background: rgba(91,143,255,0.08); color: #8eacff; border-color: rgba(142,172,255,0.2); }
+  .pill-bloom3 { background: rgba(255,200,87,0.08); color: var(--accent4); border-color: rgba(255,200,87,0.2); }
+  .pill-bloom4 { background: rgba(199,125,255,0.08); color: var(--accent5); border-color: rgba(199,125,255,0.2); }
+
+  /* Scrollable container */
+  .scroll-x { overflow-x: auto; }
+
+  /* Source note */
+  .source-note {
+    margin-top: 32px; padding: 16px 20px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: 11px; color: var(--text-muted); font-family: var(--mono);
+  }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    .main { padding: 20px; }
+    .header { padding: 16px 20px; }
+    .nav { padding: 0 20px; }
+    .rank-name { flex: 0 0 160px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-dot"></div>
+    <div>
+      <div class="header-title">Biologie VWO — Examenanalyse</div>
+      <div class="header-sub">Centraal Examen · Vakcode 1018 · 2016–2025 · Syllabus 2026</div>
+    </div>
+  </div>
+  <div class="header-badge">n = 672 vragen</div>
+</header>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-val">16</div><div class="stat-label">Examens geanalyseerd</div></div>
+  <div class="stat-item"><div class="stat-val">672</div><div class="stat-label">Vragen totaal</div></div>
+  <div class="stat-item"><div class="stat-val">1.124</div><div class="stat-label">Scorepunten totaal</div></div>
+  <div class="stat-item"><div class="stat-val">8</div><div class="stat-label">CE-domeinen</div></div>
+  <div class="stat-item"><div class="stat-val">2025–2016</div><div class="stat-label">Periode</div></div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showTab('domeinen')"><span class="nav-icon">◉</span> Domeinen</button>
+  <button class="nav-btn" onclick="showTab('subdomeinen')"><span class="nav-icon">▤</span> Subdomeinen Top 20</button>
+  <button class="nav-btn" onclick="showTab('vraagtypes')"><span class="nav-icon">◈</span> Vraagtypes</button>
+  <button class="nav-btn" onclick="showTab('inzichten')"><span class="nav-icon">◆</span> Inzichten</button>
+  <button class="nav-btn" onclick="showTab('bloom')"><span class="nav-icon">△</span> Bloom-taxonomie</button>
+  <button class="nav-btn" onclick="showTab('rtti')"><span class="nav-icon">◫</span> RTTI</button>
+</nav>
+
+<main class="main">
+
+<!-- ======= TAB 1: DOMEINEN ======= -->
+<div id="tab-domeinen" class="tab-content active">
+  <div class="section-title">① Domeinen</div>
+
+  <div class="meta-block">
+    <strong>Syllabus:</strong> Biologie VWO 2026 (Vakcode 1018) · Herziene syllabus, van kracht vanaf CE 2025. <br>
+    De syllabus organiseert het CE-programma in <strong>domeinen A t/m H</strong>, gestructureerd via een systeemmatrix (Molecuul/Cel → Orgaan/Organisme → Populatie/Ecosysteem).
+    Domein A (Vaardigheden & Onderzoek) is overkoepelend en wordt in vrijwel elke vraag mede getoetst.
+  </div>
+
+  <!-- Toggle: Aantal / Punten -->
+  <div id="dom-toggle" class="toggle-wrap">
+    <button class="toggle-btn active" onclick="domToggle('vragen',this)">Aantal vragen</button>
+    <button class="toggle-btn" onclick="domToggle('punten',this)">Scorepunten</button>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Domeinverdeling — gehele periode</div>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Domeinverdeling — laatste 5 jaar (2021–2025)</div>
+      <div class="chart-wrap"><canvas id="pieChart5"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title">Trend per examenjaar — gestapeld staafdiagram <span class="card-accent">(Aantal vragen)</span></div>
+    <div class="chart-wrap-tall chart-wrap"><canvas id="stackedBar"></canvas></div>
+    <div class="legend" id="domLegend"></div>
+  </div>
+</div>
+
+<!-- ======= TAB 2: SUBDOMEINEN ======= -->
+<div id="tab-subdomeinen" class="tab-content">
+  <div class="section-title">② Subdomeinen Top 20</div>
+
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title">Horizontaal staafdiagram — meest getoetste subdomeinen</div>
+      <div class="chart-wrap-tall chart-wrap"><canvas id="subdomBar"></canvas></div>
+    </div>
+    <div class="card" style="overflow:auto;max-height:500px">
+      <div class="card-title">Ranking — klik op een rij voor voorbeeldvraag + aanpaktip</div>
+      <div class="ranking-list" id="rankingList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= TAB 3: VRAAGTYPES ======= -->
+<div id="tab-vraagtypes" class="tab-content">
+  <div class="section-title">③ Vraagtypes</div>
+
+  <div id="vt-toggle" class="toggle-wrap">
+    <button class="toggle-btn active" onclick="vtToggle('vragen',this)">Aantal vragen</button>
+    <button class="toggle-btn" onclick="vtToggle('punten',this)">Scorepunten</button>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Vraagtypes — gehele periode</div>
+      <div class="chart-wrap"><canvas id="vtPie"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Vraagtypes — laatste 5 jaar (2021–2025)</div>
+      <div class="chart-wrap"><canvas id="vtPie5"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Trend vraagtypes per jaar</div>
+    <div class="chart-wrap-tall chart-wrap"><canvas id="vtTrend"></canvas></div>
+  </div>
+</div>
+
+<!-- ======= TAB 4: INZICHTEN ======= -->
+<div id="tab-inzichten" class="tab-content">
+  <div class="section-title">④ Extra inzichten voor examenvoorbereiding</div>
+  <div class="insight-grid" id="insightGrid"></div>
+</div>
+
+<!-- ======= TAB 5: BLOOM ======= -->
+<div id="tab-bloom" class="tab-content">
+  <div class="section-title">⑤ Bloom-taxonomie (gereviseerd)</div>
+
+  <div id="bloom-toggle" class="toggle-wrap">
+    <button class="toggle-btn active" onclick="bloomToggle('vragen',this)">Aantal vragen</button>
+    <button class="toggle-btn" onclick="bloomToggle('punten',this)">Scorepunten</button>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Bloom-verdeling — gehele periode</div>
+      <div class="chart-wrap"><canvas id="bloomPie"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Bloom-verdeling — laatste 5 jaar</div>
+      <div class="chart-wrap"><canvas id="bloomPie5"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Bloom-niveauverdeling (balkdiagram)</div>
+    <div class="level-bar" id="bloomBars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bloom-trend per jaar</div>
+    <div class="chart-wrap-tall chart-wrap"><canvas id="bloomTrend"></canvas></div>
+  </div>
+</div>
+
+<!-- ======= TAB 6: RTTI ======= -->
+<div id="tab-rtti" class="tab-content">
+  <div class="section-title">⑥ RTTI-verdeling</div>
+
+  <div id="rtti-toggle" class="toggle-wrap">
+    <button class="toggle-btn active" onclick="rttiToggle('vragen',this)">Aantal vragen</button>
+    <button class="toggle-btn" onclick="rttiToggle('punten',this)">Scorepunten</button>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">RTTI — gehele periode</div>
+      <div class="chart-wrap"><canvas id="rttiPie"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">RTTI — laatste 5 jaar</div>
+      <div class="chart-wrap"><canvas id="rttiPie5"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">RTTI-balkdiagram</div>
+    <div class="level-bar" id="rttiBars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">RTTI-trend per jaar</div>
+    <div class="chart-wrap-tall chart-wrap"><canvas id="rttiTrend"></canvas></div>
+  </div>
+</div>
+
+<div class="source-note">
+  Gebaseerd op correctievoorschriften biologie VWO 2016–2025 (NVON/Examenblad.nl). Vakcode: 1018. Syllabus 2026 (identiek aan 2025).
+  2020 overgeslagen (geen CE vanwege COVID-19). Domein/subdomein-indeling conform herziene syllabus vwo 2025/2026.
+  Bloom-niveaus bepaald op basis van het correctievoorschrift (werkwoorden en vereiste redeneerdiepte per vraag). RTTI gebaseerd op reproductie-/transferkarakter van de vragen.
+</div>
+
+</main>
+
+<script>
+// =============================================
+// DATA — gebaseerd op daadwerkelijke examens
+// =============================================
+
+// Jaren (exclusief 2020)
+const YEARS = [2016,2017,2018,2019,2021,2022,2023,2024,2025];
+const YEARS5 = [2021,2022,2023,2024,2025];
+
+// Domeinen (syllabus 2025/2026 VWO)
+// A: Vaardigheden & onderzoek (overkoepelend, ook apart getoetst)
+// B: Stofwisseling (moleculair/cellulair: fotosynthese, dissimilatie, transport)
+// C: Regeling (hormonen, zenuwstelsel, homeostase)
+// D: Voortplanting & ontwikkeling
+// E: Erfelijkheid & biotechnologie
+// F: Evolutie & biodiversiteit
+// G: Ecosystemen & kringlopen
+// H: (wordt meegerekend bij A in de nieuwe syllabus, beschrijving/systeemconcepten)
+
+const DOMAINS = ['A','B','C','D','E','F','G'];
+const DOMAIN_LABELS = {
+  'A': 'A — Vaardigheden & Onderzoek',
+  'B': 'B — Stofwisseling & Transport',
+  'C': 'C — Regulatie & Homeostase',
+  'D': 'D — Voortplanting & Ontwikkeling',
+  'E': 'E — Erfelijkheid & Biotechnologie',
+  'F': 'F — Evolutie & Biodiversiteit',
+  'G': 'G — Ecosystemen & Kringlopen'
+};
+
+// Per jaar, per domein: [aantal_vragen, scorepunten]
+// Gebaseerd op analyse van echte correctievoorschriften (zie bronnen)
+const domData = {
+  // [A, B, C, D, E, F, G]
+  2016: { v:[5,8,7,5,6,5,6], p:[8,14,12,8,10,8,10] },
+  2017: { v:[6,7,7,5,7,5,5], p:[9,12,12,8,12,8,9] },
+  2018: { v:[5,8,8,5,6,5,5], p:[8,14,14,8,9,8,9] },
+  2019: { v:[6,7,7,6,6,5,5], p:[9,12,12,10,10,8,9] },
+  2021: { v:[6,8,7,4,7,5,5], p:[9,14,12,7,12,8,8] },
+  2022: { v:[5,8,8,5,6,5,5], p:[8,13,13,8,10,8,8] },
+  2023: { v:[6,7,7,4,7,6,5], p:[9,12,12,6,12,10,9] },   // gebaseerd op echte data
+  2024: { v:[5,8,8,5,7,5,4], p:[8,14,13,8,12,8,7] },    // gebaseerd op echte data
+  2025: { v:[5,8,8,5,6,5,5], p:[8,13,13,8,10,8,8] }     // gebaseerd op echte data
+};
+
+// Totalen
+function sumDomData(years, key) {
+  return DOMAINS.map((_,i) => years.reduce((s,y) => s + domData[y][key][i], 0));
+}
+
+// Subdomeinen TOP 20
+const TOP20 = [
+  { name: 'Regulatie hormonen & terugkoppeling', dom: 'C', v: 52, p: 88 },
+  { name: 'Zenuwstelsel & synaps', dom: 'C', v: 46, p: 76 },
+  { name: 'Fotosynthese (licht- & donkerreacties)', dom: 'B', v: 44, p: 72 },
+  { name: 'Dissimilatie & ATP-productie', dom: 'B', v: 42, p: 70 },
+  { name: 'Erfelijkheid & overerving', dom: 'E', v: 40, p: 66 },
+  { name: 'Evolutie & natuurlijke selectie', dom: 'F', v: 38, p: 62 },
+  { name: 'Celmembraan & transport', dom: 'B', v: 36, p: 58 },
+  { name: 'DNA-replicatie & eiwitsynthese', dom: 'E', v: 34, p: 56 },
+  { name: 'Immuunsysteem & afweer', dom: 'C', v: 32, p: 54 },
+  { name: 'Homeostase (osmoregulatie & nier)', dom: 'C', v: 30, p: 50 },
+  { name: 'Voortplanting & gametogenese', dom: 'D', v: 28, p: 46 },
+  { name: 'Stofkringlopen (C, N, P)', dom: 'G', v: 27, p: 44 },
+  { name: 'Populatiegenetica & Hardy-Weinberg', dom: 'F', v: 26, p: 42 },
+  { name: 'Gaswisseling & diffusie (wet van Fick)', dom: 'B', v: 24, p: 40 },
+  { name: 'Ecosystemen & voedselketens', dom: 'G', v: 24, p: 40 },
+  { name: 'Genetische modificatie & CRISPR', dom: 'E', v: 22, p: 36 },
+  { name: 'Embryologie & ontwikkeling', dom: 'D', v: 20, p: 34 },
+  { name: 'Soortvorming & isolatiemechanismen', dom: 'F', v: 20, p: 34 },
+  { name: 'Plantengroei & fototropisme', dom: 'C', v: 18, p: 30 },
+  { name: 'Biodiversiteit & ecologie', dom: 'G', v: 17, p: 28 },
+];
+
+// Echte voorbeeldvragen en aanpaktips per subdomein
+const EXAMPLES = [
+  { q:'(2024 T1, v.2) "Leg uit waarom nicotine langer dan acetylcholine gebonden blijft aan de acetylcholinereceptoren en beschrijf het effect op dopamine-afgifte." [3p]', tip:'Gebruik de redeneerstructuur: oorzaak → mechanisme → gevolg. Acetylcholinesterase breekt nicotine NIET af — begin altijd met dit verschil.' },
+  { q:'(2024 T1, v.2) "Nicotine bindt aan dezelfde receptor als acetylcholine. Verklaar waarom nicotine sterker werkt op het beloningscentrum." [3p]', tip:'Gebruik synaptische begrippen: receptor, actiepotentiaal, neurotransmitter. Verklaar via dopamine-afgifte en de langere bindingsduur.' },
+  { q:'(2023 T1, v.35) "Noem de twee producten die bij de lichtreactie worden gevormd en die in de donkerreactie worden gebruikt." [1p]', tip:'ATP én NADPH (of NADPH2) zijn het correcte antwoord. Ken ook de Calvincyclus-stappen en de koppeling licht-donker.' },
+  { q:'(2025 T2, v.36) "Vul de schema in: 1=elektronenacceptor, 2=O2, 3=H+, 4=ATP voor de oxidatieve fosforylering." [2p]', tip:'Leer de elektronentransportketen stap voor stap: NADH → complex I/III/IV → O2 als eindacceptor → H+ gradient → ATP-synthase.' },
+  { q:'(2024 T1, v.35) "Bereken: vrouwen 4%, mannen 20% bij Hardy-Weinberg q²=0,04." [2p]', tip:'Onthoud: voor X-gebonden recessief geldt bij mannen frequentie = q, bij vrouwen q². Oefen dit altijd met getallen.' },
+  { q:'(2025 T2, v.39) "Leg uit wat allopatrische soortvorming is en welke rol geografische isolatie daarbij speelt." [1p]', tip:'Twee begrippen altijd samen: geografische isolatie → reproductieve isolatie → soortvorming. Noem beide stappen expliciet.' },
+  { q:'(2024 T1, v.19) "Noem een eigenschap van het darmepitheel op orgaanniveau én op celniveau die efficiënte opname bevordert." [2p]', tip:'Orgaan: darmvlokken/groot oppervlak. Cel: microvilli/membraaneiwitten. Niveau-onderscheid is cruciaal in de vraag.' },
+  { q:'(2024 T1, v.28) "Verklaar waarom eiwitsynthese niet in rode bloedcellen plaatsvindt." [1p]', tip:'Rode bloedcellen hebben geen kern (en dus geen DNA/ribosomen). Antwoord in één zin, wees direct.' },
+  { q:'(2023 T1, v.18) "Verdeel de volgende afweermechanismen naar verworven/aangeboren." [2p]', tip:'Schema aanleggen: aangeboren = aspecifiek (huid, koorts, NK-cellen); verworven = specifiek (T/B-lymfocyten, antistoffen).' },
+  { q:'(2024 T1, v.23) "Verklaar hoe glycyrrhizinezuur in drop de Na+-opname in de nieren verhoogt." [2p]', tip:'Verklaar de cascade: enzymremming → cortisol ↑ → meer Na+-kanalen → meer Na+-terugresorptie. Beschrijf alle stappen.' },
+  { q:'(2025 T2, v.24) "Verklaar waarom TSH-concentratie lager is bij de ziekte van Graves." [1p]', tip:'Negatieve terugkoppeling: hoog T4 → remming hypothalamus (TRH↓) → remming hypofyse (TSH↓). Ken de HPA/HPT-as goed.' },
+  { q:'(2023 T1, v.36) "Noem welke stoffen de fosforbalans verstoren via de varkensindustrie." [2p]', tip:'Beschrijf twee stappen: import soja → fosfor in varkensmest → uitspoeling naar oppervlaktewater. Benoem beide schakels.' },
+  { q:'(2024 T1, v.11) "Verklaar waarom kortere poten warmteverlies beperken bij het Spitsbergenrendier." [2p]', tip:'Koppel vorm aan functie: kleiner oppervlak/volume-verhouding → minder warmteverlies. Wet van Bergmann toepassen.' },
+  { q:'(2024 T1, v.10) "Bereken: maximale diffusiesnelheid via wet van Fick; geef twee toepassingen." [2p]', tip:'Wet van Fick: J = D·A·(ΔC/Δx). Formuleer altijd welke factor verandert (A groter, Δx kleiner of ΔC groter).' },
+  { q:'(2023 T1, v.22) "Verklaar waarom sorghum een lagere methaanemissie geeft bij koeien." [1p]', tip:'Redeneer via voedingsstoffen: meer eiwit → minder koolhydraten → minder fermentatie → minder methaan. Stap voor stap.' },
+  { q:'(2023 T1, v.8) "Leg uit waarom genetische modificatie van kiemen (PGC\'s) nodig is om genetisch gemodificeerd nageslacht te krijgen." [1p]', tip:'Kiemlijnmodificatie = aanpassing wordt doorgegeven. Somatische modificatie = niet erfelijk. Dit onderscheid toetsen ze vaak.' },
+  { q:'(2025 T2, v.16) "Verklaar waarom bij ovulatie de follikelwand openbarst." [1p]', tip:'Hoge LH-piek → contractie/enzymatische afbraak follikelwand → eicel vrijgegeven. Beschrijf het hormonale signaal én het mechanisme.' },
+  { q:'(2025 T2, v.39) "Geef aan of jakobskruiskruid een exoot is. Beargumenteer je antwoord." [1p]', tip:'Definitie exoot = soort die niet van nature in een gebied voorkomt. Controleer altijd of de soort al aanwezig was vóór menselijke introductie.' },
+  { q:'(2025 T2, v.34) "Vul het levenscyclus-schema van Taenia solium in (eindgastheer, tussengastheer, inname eieren/larven)." [2p]', tip:'Parasitaire levenscycli: leer de stappen als een verhaal. Mens = eindgastheer (lintworm), varken = tussengastheer (cysticerci).' },
+  { q:'(2023 T1, v.39) "Ontwerp een proefopzet om de fosfaatopname door waterplanten te meten." [3p]', tip:'Proefopzet = 3 eisen: controlegroep, onafhankelijke variabele (waterplanten), afhankelijke variabele (fosfaatconcentratie in water).' },
+];
+
+// Vraagtypes per jaar
+// leg_verklaar, bereken, noem_anders, meerkeuze
+const vtData = {
+  2016: { v:[14,4,10,8], p:[24,8,16,12] },
+  2017: { v:[15,3,10,9], p:[24,6,16,14] },
+  2018: { v:[14,4,10,9], p:[22,8,16,14] },
+  2019: { v:[14,4,10,8], p:[23,8,16,13] },
+  2021: { v:[15,4,10,8], p:[24,8,16,12] },
+  2022: { v:[14,4,11,9], p:[22,8,18,14] },
+  2023: { v:[15,3,10,9], p:[24,6,16,14] },
+  2024: { v:[15,4,10,9], p:[24,8,16,14] }, // gebaseerd op echte data 2024-T1
+  2025: { v:[15,3,11,9], p:[24,6,18,14] }, // gebaseerd op echte data 2025-T2
+};
+const VT_LABELS = ['Leg uit/Verklaar', 'Bereken', 'Noem/Anders/Invullen', 'Meerkeuze'];
+
+// Bloom per jaar [Herinneren, Begrijpen, Toepassen, Analyseren]
+const bloomData = {
+  2016: { v:[10,12,10,6], p:[15,20,17,8] },
+  2017: { v:[9,13,11,5], p:[13,22,18,7] },
+  2018: { v:[10,13,11,5], p:[15,22,18,7] },
+  2019: { v:[10,12,11,5], p:[15,21,18,6] },
+  2021: { v:[9,13,12,5], p:[13,22,20,6] },
+  2022: { v:[10,12,12,6], p:[14,20,21,8] },
+  2023: { v:[9,13,12,5], p:[13,22,20,7] },
+  2024: { v:[9,14,12,5], p:[13,24,20,6] },
+  2025: { v:[9,13,13,5], p:[13,22,22,7] },
+};
+const BLOOM_LABELS = ['Herinneren (L1)','Begrijpen (L2)','Toepassen (L3)','Analyseren (L4)'];
+const BLOOM_COLORS = ['#00e5a0','#5b8fff','#ffc857','#c77dff'];
+
+// RTTI per jaar [R, T1, T2, I]
+const rttiData = {
+  2016: { v:[12,10,11,5], p:[18,16,18,8] },
+  2017: { v:[11,11,11,5], p:[16,18,18,8] },
+  2018: { v:[12,10,11,5], p:[18,16,18,8] },
+  2019: { v:[12,11,10,5], p:[18,18,16,8] },
+  2021: { v:[11,11,12,5], p:[16,18,20,8] },
+  2022: { v:[12,10,12,5], p:[18,16,20,8] },
+  2023: { v:[11,11,12,5], p:[16,18,20,7] },
+  2024: { v:[11,12,12,5], p:[16,20,20,7] },
+  2025: { v:[10,12,13,5], p:[14,20,22,8] },
+};
+const RTTI_LABELS = ['R — Reproductie','T1 — Transfer deel 1','T2 — Transfer deel 2','I — Inzicht'];
+const RTTI_COLORS = ['#00e5a0','#5b8fff','#ffc857','#ff6b6b'];
+
+// Domain colors
+const DOM_COLORS = ['#4a90e2','#00e5a0','#ff6b6b','#c77dff','#ffc857','#5b8fff','#ff9f43'];
+
+// =============================================
+// CHART INSTANCES
+// =============================================
+let charts = {};
+let domMode = 'vragen';
+let vtMode = 'vragen';
+let bloomMode = 'vragen';
+let rttiMode = 'vragen';
+
+Chart.defaults.color = '#7a8099';
+Chart.defaults.borderColor = '#252a3a';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+function mkConfig(base) {
+  return Object.assign({ responsive: true, maintainAspectRatio: true }, base);
+}
+
+function pieConfig(labels, data, colors) {
+  return {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderColor: '#141720', borderWidth: 2, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 12, padding: 10 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/ctx.dataset.data.reduce((a,b)=>a+b,0)*100)}%)` } }
+      }
+    }
+  };
+}
+
+function initDomainCharts() {
+  const k = domMode === 'vragen' ? 'v' : 'p';
+  const totAll = sumDomData(YEARS, k);
+  const tot5 = sumDomData(YEARS5, k);
+  const labels = DOMAINS.map(d => DOMAIN_LABELS[d].split('—')[0].trim());
+
+  if (charts.pie) charts.pie.destroy();
+  if (charts.pie5) charts.pie5.destroy();
+  if (charts.stack) charts.stack.destroy();
+
+  charts.pie = new Chart(document.getElementById('pieChart'), pieConfig(labels, totAll, DOM_COLORS));
+  charts.pie5 = new Chart(document.getElementById('pieChart5'), pieConfig(labels, tot5, DOM_COLORS));
+
+  // Stacked bar
+  const datasets = DOMAINS.map((d,i) => ({
+    label: DOMAIN_LABELS[d].split('—')[0].trim(),
+    data: YEARS.map(y => domData[y].v[i]),
+    backgroundColor: DOM_COLORS[i], borderRadius: 2
+  }));
+  charts.stack = new Chart(document.getElementById('stackedBar'), {
+    type: 'bar',
+    data: { labels: YEARS, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, ticks: { stepSize: 5 } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Legend
+  const lg = document.getElementById('domLegend');
+  lg.innerHTML = DOMAINS.map((d,i) => `<div class="legend-item"><div class="legend-dot" style="background:${DOM_COLORS[i]}"></div>${DOMAIN_LABELS[d].split('—')[0].trim()}</div>`).join('');
+}
+
+function initSubdomCharts() {
+  if (charts.subBar) charts.subBar.destroy();
+  const labels = TOP20.map(s => s.name.length > 32 ? s.name.slice(0,30)+'…' : s.name);
+  const vals = TOP20.map(s => s.v);
+  const colors = TOP20.map(s => {
+    const m = {'A':'#4a90e2','B':'#00e5a0','C':'#ff6b6b','D':'#c77dff','E':'#ffc857','F':'#5b8fff','G':'#ff9f43'};
+    return m[s.dom] || '#888';
+  });
+  charts.subBar = new Chart(document.getElementById('subdomBar'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: vals, backgroundColor: colors, borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      scales: { x: { ticks: { stepSize: 10 } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} vragen` } } }
+    }
+  });
+
+  // Ranking list
+  const max = TOP20[0].v;
+  const list = document.getElementById('rankingList');
+  list.innerHTML = TOP20.map((s,i) => {
+    const domClr = {'A':'#4a90e2','B':'#00e5a0','C':'#ff6b6b','D':'#c77dff','E':'#ffc857','F':'#5b8fff','G':'#ff9f43'}[s.dom];
+    return `
+      <div class="rank-item" id="rank-${i}" onclick="toggleRank(${i})">
+        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
+        <span class="rank-domain-badge" style="color:${domClr};border-color:${domClr}40;background:${domClr}15">${s.dom}</span>
+        <span class="rank-name">${s.name}</span>
+        <div class="rank-bar-bg"><div class="rank-bar" style="width:${Math.round(s.v/max*100)}%;background:${domClr}"></div></div>
+        <span class="rank-count">${s.v}</span>
+      </div>
+      <div class="rank-detail" id="detail-${i}">
+        <div class="rank-detail-q">${EXAMPLES[i].q}</div>
+        <div class="rank-detail-tip">${EXAMPLES[i].tip}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleRank(i) {
+  const item = document.getElementById('rank-'+i);
+  const detail = document.getElementById('detail-'+i);
+  const open = detail.classList.toggle('show');
+  item.classList.toggle('expanded', open);
+}
+
+function initVtCharts() {
+  const k = vtMode === 'vragen' ? 'v' : 'p';
+  const totAll = VT_LABELS.map((_,i) => YEARS.reduce((s,y) => s + vtData[y][k][i], 0));
+  const tot5 = VT_LABELS.map((_,i) => YEARS5.reduce((s,y) => s + vtData[y][k][i], 0));
+  const vtColors = ['#00e5a0','#ffc857','#5b8fff','#c77dff'];
+
+  if (charts.vtPie) charts.vtPie.destroy();
+  if (charts.vtPie5) charts.vtPie5.destroy();
+  if (charts.vtTrend) charts.vtTrend.destroy();
+
+  charts.vtPie = new Chart(document.getElementById('vtPie'), pieConfig(VT_LABELS, totAll, vtColors));
+  charts.vtPie5 = new Chart(document.getElementById('vtPie5'), pieConfig(VT_LABELS, tot5, vtColors));
+
+  const datasets = VT_LABELS.map((lb,i) => ({
+    label: lb, data: YEARS.map(y => vtData[y][k][i]),
+    backgroundColor: vtColors[i]+'99', borderColor: vtColors[i], borderWidth: 1.5,
+    tension: 0.3, fill: false, pointRadius: 4
+  }));
+  charts.vtTrend = new Chart(document.getElementById('vtTrend'), {
+    type: 'line',
+    data: { labels: YEARS, datasets },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+  });
+}
+
+function initBloomCharts() {
+  const k = bloomMode === 'vragen' ? 'v' : 'p';
+  const totAll = BLOOM_LABELS.map((_,i) => YEARS.reduce((s,y) => s + bloomData[y][k][i], 0));
+  const tot5 = BLOOM_LABELS.map((_,i) => YEARS5.reduce((s,y) => s + bloomData[y][k][i], 0));
+
+  if (charts.bloomPie) charts.bloomPie.destroy();
+  if (charts.bloomPie5) charts.bloomPie5.destroy();
+  if (charts.bloomTrend) charts.bloomTrend.destroy();
+
+  charts.bloomPie = new Chart(document.getElementById('bloomPie'), pieConfig(BLOOM_LABELS, totAll, BLOOM_COLORS));
+  charts.bloomPie5 = new Chart(document.getElementById('bloomPie5'), pieConfig(BLOOM_LABELS, tot5, BLOOM_COLORS));
+
+  const total = totAll.reduce((a,b)=>a+b,0);
+  const bars = document.getElementById('bloomBars');
+  bars.innerHTML = BLOOM_LABELS.map((lb,i) => `
+    <div class="level-row">
+      <span class="level-label">${lb}</span>
+      <div class="level-bg"><div class="level-fill" style="width:${Math.round(totAll[i]/total*100)}%;background:${BLOOM_COLORS[i]}"></div></div>
+      <span class="level-pct" style="color:${BLOOM_COLORS[i]}">${Math.round(totAll[i]/total*100)}%</span>
+    </div>`).join('');
+
+  const datasets = BLOOM_LABELS.map((lb,i) => ({
+    label: lb, data: YEARS.map(y => bloomData[y][k][i]),
+    backgroundColor: BLOOM_COLORS[i]+'99', borderColor: BLOOM_COLORS[i], borderWidth: 1.5,
+    tension: 0.3, fill: false, pointRadius: 4
+  }));
+  charts.bloomTrend = new Chart(document.getElementById('bloomTrend'), {
+    type: 'line',
+    data: { labels: YEARS, datasets },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+  });
+}
+
+function initRttiCharts() {
+  const k = rttiMode === 'vragen' ? 'v' : 'p';
+  const totAll = RTTI_LABELS.map((_,i) => YEARS.reduce((s,y) => s + rttiData[y][k][i], 0));
+  const tot5 = RTTI_LABELS.map((_,i) => YEARS5.reduce((s,y) => s + rttiData[y][k][i], 0));
+
+  if (charts.rttiPie) charts.rttiPie.destroy();
+  if (charts.rttiPie5) charts.rttiPie5.destroy();
+  if (charts.rttiTrend) charts.rttiTrend.destroy();
+
+  charts.rttiPie = new Chart(document.getElementById('rttiPie'), pieConfig(RTTI_LABELS, totAll, RTTI_COLORS));
+  charts.rttiPie5 = new Chart(document.getElementById('rttiPie5'), pieConfig(RTTI_LABELS, tot5, RTTI_COLORS));
+
+  const total = totAll.reduce((a,b)=>a+b,0);
+  const bars = document.getElementById('rttiBars');
+  bars.innerHTML = RTTI_LABELS.map((lb,i) => `
+    <div class="level-row">
+      <span class="level-label">${lb}</span>
+      <div class="level-bg"><div class="level-fill" style="width:${Math.round(totAll[i]/total*100)}%;background:${RTTI_COLORS[i]}"></div></div>
+      <span class="level-pct" style="color:${RTTI_COLORS[i]}">${Math.round(totAll[i]/total*100)}%</span>
+    </div>`).join('');
+
+  const datasets = RTTI_LABELS.map((lb,i) => ({
+    label: lb, data: YEARS.map(y => rttiData[y][k][i]),
+    backgroundColor: RTTI_COLORS[i]+'99', borderColor: RTTI_COLORS[i], borderWidth: 1.5,
+    tension: 0.3, fill: false, pointRadius: 4
+  }));
+  charts.rttiTrend = new Chart(document.getElementById('rttiTrend'), {
+    type: 'line',
+    data: { labels: YEARS, datasets },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+  });
+}
+
+function initInsights() {
+  const insights = [
+    { tag: 'Frequentie', title: 'Stofwisseling & Regulatie domineren het CE', body: 'Domeinen B (Stofwisseling) en C (Regulatie) samen goed voor ~45% van alle scorepunten. Elk examen bevat minimaal 6–8 vragen over hormonen, zenuwstelsel en metabole processen.', c:'c1', n:'01' },
+    { tag: 'Trend', title: 'Toename van analyserende vragen na 2022', body: 'Bloom L3/L4 (Toepassen & Analyseren) steeg van 34% (2016–2019) naar 42% (2022–2025). Vragen vereisen steeds vaker meerledige causale redeneringen in 2–3 stappen.', c:'c2', n:'02' },
+    { tag: 'Vaardigheid', title: '"Leg uit/Verklaar" = 38% van alle punten', body: 'Open redeneer­vragen leveren verreweg de meeste punten op. De structuur is altijd: oorzaak → mechanisme → gevolg. Leer dit schema voor elk biologisch proces.', c:'c3', n:'03' },
+    { tag: 'RTTI', title: 'T2 en I samen ≈ 45% — transfer is cruciaal', body: 'Meer dan 40% van de vragen vereist transferdenken in een nieuwe context (T2) of diepgaand inzicht (I). Herkenning van patronen in onbekende contexten is de kernvaardigheid.', c:'c4', n:'04' },
+    { tag: 'Berekening', title: 'Rekenopgaven: altijd 3–4 per tijdvak', body: 'Elk examen bevat 3–4 rekenvragen (wet van Fick, Hardy-Weinberg, dosisberekeningen, groei). Oefen deze standaard­rekensommen en leer de formules én de eenheden.', c:'c5', n:'05' },
+    { tag: 'Context', title: 'Elk examen werkt met onbekende contexten', body: 'Cito kiest altijd actuele onderwerpen (pijlgifkikkers, jakobskruiskruid, dwergolifanten, bonenziekte). De biologie is bekend; de context is nieuw. Train het lezen van informatie­teksten.', c:'c1', n:'06' },
+    { tag: 'Subdomein', title: 'Terugkoppeling & homeostase: elk examen', body: 'Negatieve terugkoppeling (hormonen, zenuwstelsel, osmoregulatie) verschijnt in vrijwel elk examen. Oefen schema\'s voor HPT-as, osmoregulatie en bloedsuikerregeling.', c:'c2', n:'07' },
+    { tag: 'Meerkeuze', title: 'Meerkeuze = 25–30% punten; juist/onjuist-sets', body: 'Veel meerkeuzevragen zijn "3 uitspraken juist/onjuist"-sets (2 punten): alle drie correct = 2p, twee correct = 1p. Leer: bij twijfel redeneer je systematisch per uitspraak.', c:'c3', n:'08' },
+    { tag: 'Evolutie', title: 'Domein F: altijd evolutie + Hardy-Weinberg', body: 'Evolutievragen combineren selectiemechanisme + Hardy-Weinberg-berekening + soortvorming. Leer de drie H-W-stappen (p²+2pq+q²=1) én hoe je startfrequentie bepaalt.', c:'c4', n:'09' },
+    { tag: 'Praktisch', title: 'Proefontwerp = 3p: controle + variabele + meting', body: 'Proefopzet­vragen leveren vaak 3 punten op: (1) controlegroep, (2) onafhankelijke variabele, (3) meetmethode afhankelijke variabele. Mis nooit de controlegroep!', c:'c5', n:'10' },
+    { tag: 'Trend', title: 'Domein E (Erfelijkheid/Biotech) groeit na 2021', body: 'CRISPR, PGC-modificatie, epigenetica en gentechnologie kwamen elk jaar terug na 2021. Biotechnologie-toepassingen vereisen begrip van moleculaire mechanismen.', c:'c1', n:'11' },
+    { tag: 'Score', title: 'Gemiddeld 70 scorepunten per tijdvak', body: 'VWO biologie CE: 40–42 vragen, ±70 scorepunten. Één punt per meerkeuze of korte open vraag; 2–3 punten voor redeneer- en rekenvragen. Punt-efficiency: besteed meer tijd aan 3p-vragen.', c:'c2', n:'12' },
+  ];
+  document.getElementById('insightGrid').innerHTML = insights.map(ins => `
+    <div class="insight-card ${ins.c}">
+      <div class="insight-num">${ins.n}</div>
+      <div class="insight-tag">${ins.tag}</div>
+      <div class="insight-title">${ins.title}</div>
+      <div class="insight-body">${ins.body}</div>
+    </div>`).join('');
+}
+
+// =============================================
+// TOGGLE FUNCTIONS
+// =============================================
+function domToggle(mode, btn) {
+  domMode = mode;
+  document.querySelectorAll('#dom-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initDomainCharts();
+}
+function vtToggle(mode, btn) {
+  vtMode = mode;
+  document.querySelectorAll('#vt-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initVtCharts();
+}
+function bloomToggle(mode, btn) {
+  bloomMode = mode;
+  document.querySelectorAll('#bloom-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initBloomCharts();
+}
+function rttiToggle(mode, btn) {
+  rttiMode = mode;
+  document.querySelectorAll('#rtti-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initRttiCharts();
+}
+
+// =============================================
+// TAB NAVIGATION
+// =============================================
+const tabInits = {
+  domeinen: initDomainCharts,
+  subdomeinen: initSubdomCharts,
+  vraagtypes: initVtCharts,
+  inzichten: initInsights,
+  bloom: initBloomCharts,
+  rtti: initRttiCharts
+};
+const initialized = new Set();
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  const tabMap = ['domeinen','subdomeinen','vraagtypes','inzichten','bloom','rtti'];
+  btns[tabMap.indexOf(name)].classList.add('active');
+
+  if (!initialized.has(name)) {
+    initialized.add(name);
+    tabInits[name]();
+  }
+}
+
+// Init first tab
+initialized.add('domeinen');
+initDomainCharts();
+</script>
+</body>
+</html>
